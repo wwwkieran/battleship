@@ -12,7 +12,7 @@ public class Ship {
 	
 	public Ship (int size, int xstart, int ystart, int xend, int yend) {
 		this.size = size;
-		this.sunk = false;
+
 		
 		//Make sure that xend and yend are bigger than xstart and ystart, repectively
 		if (xstart > xend) {

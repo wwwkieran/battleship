@@ -17,5 +17,9 @@ public class Battleship extends Applet implements ActionListener {
 	}
 
 	
+} class BoardCanvas extends Canvas {
+
+	
+	
 }
  

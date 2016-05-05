@@ -66,7 +66,7 @@ public class Board {
 		}
 	}
 	
-	public boolean isSunk(Ship theShip) {
+	private boolean isSunk(Ship theShip) {
 		// returns true if ship object is sunk 
 		// meaning all squares of ship are hit(3)
 		// false otherwise
