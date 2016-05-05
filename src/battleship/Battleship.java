@@ -7,7 +7,6 @@ import java.util.*; // for Stack
 
 public class Battleship extends Applet implements ActionListener {
 	
-	int x = 1;
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -19,3 +18,4 @@ public class Battleship extends Applet implements ActionListener {
 
 	
 }
+ 
