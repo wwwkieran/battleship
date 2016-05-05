@@ -7,19 +7,29 @@ public class Ship {
 	protected int yStartingCoordinate;
 	protected int xEndingCoordinate;
 	protected int yEndingCoordinate;
-	protected int Orientation; // 0 if horizontal, 1 if vertical
-	boolean sunk;
 	
 	//constructor 
 	
 	public Ship (int size, int xstart, int ystart, int xend, int yend) {
 		this.size = size;
 		this.sunk = false;
-		this.xStartingCoordinate = xstart;
-		this.yStartingCoordinate = ystart;
-		this.xEndingCoordinate = xend;
-		this.yEndingCoordinate = yend;
-		this.Orientation = checkOrientation(xstart, ystart, xend, yend);
+		
+		//Make sure that xend and yend are bigger than xstart and ystart, repectively
+		if (xstart > xend) {
+			this.xStartingCoordinate = xend;
+			this.xEndingCoordinate = xstart;
+		} else {
+			this.xStartingCoordinate = xstart;
+			this.xEndingCoordinate = xend;
+		}
+		
+		if (ystart > yend) {
+			this.yStartingCoordinate = xend;
+			this.yEndingCoordinate = xstart;
+		} else {
+			this.yStartingCoordinate = xstart;
+			this.yEndingCoordinate = xend;
+		}
 	}
 	
 	// instance methods
@@ -32,36 +42,25 @@ public class Ship {
 		}
 	}
 	
-	public boolean isSunk() {
-		// returns true if ship object is sunk 
-		// meaning all squares of ship are hit(3)
-		// false otherwise
-		
-		return true;
-	}
 	
 	// return methods
 	
 	public int size() {
 		return size;
 	}
-	public int xStartingCoordinate() {
+	public int startX() {
 		return xStartingCoordinate;
 	}
-	public int yStartingCoordinate() {
+	public int startY() {
 		return yStartingCoordinate;
 	}
-	public int xEndingCoordinate() {
+	public int endX() {
 		return xEndingCoordinate;
 	}
-	public int yEndingCoordinate() {
+	public int endY() {
 		return yEndingCoordinate;
 	}
-	public int Orientation() {
-		return Orientation;
-	}
-	
-	
+
 	
 	
 }
