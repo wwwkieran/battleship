@@ -20,7 +20,7 @@ public class Battleship extends Applet implements ActionListener {
 } class BoardCanvas extends Canvas implements ActionListener {
 	Board board;
 	
-	
+	//bla bla bla
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
