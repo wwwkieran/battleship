@@ -37,6 +37,10 @@ public class Board {
 		
 	}
 	
+	public int get(int x, int y) {
+		return board[x][y];
+	}
+	
 	public void addShip(Ship newShip, int numShip) {
 		//Update board
 		for (int x = newShip.startX(); x <= newShip.endX(); x++) {
@@ -78,6 +82,8 @@ public class Board {
 		
 		return true;
 	}
+	
+	
 	
 	
 	

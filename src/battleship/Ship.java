@@ -10,10 +10,9 @@ public class Ship {
 	
 	//constructor 
 	
-	public Ship (int size, int xstart, int ystart, int xend, int yend) {
+	public Ship (int size, int xstart, int xend, int ystart,  int yend) {
 		this.size = size;
 
-		
 		//Make sure that xend and yend are bigger than xstart and ystart, repectively
 		if (xstart > xend) {
 			this.xStartingCoordinate = xend;
@@ -24,11 +23,11 @@ public class Ship {
 		}
 		
 		if (ystart > yend) {
-			this.yStartingCoordinate = xend;
-			this.yEndingCoordinate = xstart;
+			this.yStartingCoordinate = yend;
+			this.yEndingCoordinate = ystart;
 		} else {
-			this.yStartingCoordinate = xstart;
-			this.yEndingCoordinate = xend;
+			this.yStartingCoordinate = ystart;
+			this.yEndingCoordinate = yend;
 		}
 	}
 	
