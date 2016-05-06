@@ -22,6 +22,8 @@ public class Battleship extends Applet implements ActionListener {
 	
 	//bla bla bla
 	
+	Canvas c1 = new Canvas();
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
