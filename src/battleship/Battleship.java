@@ -23,6 +23,7 @@ public class Battleship extends Applet implements ActionListener {
 	//bla bla bla
 	
 	Canvas c1 = new Canvas();
+	Canvas c2 = new Canvas();
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
