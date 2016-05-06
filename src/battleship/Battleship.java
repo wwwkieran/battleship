@@ -17,8 +17,17 @@ public class Battleship extends Applet implements ActionListener {
 	}
 
 	
-} class BoardCanvas extends Canvas {
-
+} class BoardCanvas extends Canvas implements ActionListener {
+	Board board;
+	
+	
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 	
 	
 }

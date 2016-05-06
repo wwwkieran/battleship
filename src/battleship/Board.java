@@ -25,10 +25,6 @@ public class Board {
 	
 	//instance methods 
 	
-	public void clear() {
-		
-	}
-	
 	public void shot(int x, int y) {
 		if (board[x][y] == 1) {
 			//	There was a hit
@@ -41,14 +37,16 @@ public class Board {
 		
 	}
 	
-	public void addShip(Ship newShip) {
+	public void addShip(Ship newShip, int numShip) {
 		//Update board
 		for (int x = newShip.startX(); x <= newShip.endX(); x++) {
 			for (int y = newShip.startY(); y <= newShip.endY(); y++) {
 				board[x][y] = 1;
 			}
 		}
+		
 		//Add ship to array
+		shipArray[numShip] = newShip;
 		
 	}
 	
