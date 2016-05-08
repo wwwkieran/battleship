@@ -73,6 +73,7 @@ class boardCanvas extends Canvas implements MouseListener {
 	public boardCanvas(boolean active) {
 		board = new Board();
 		isActive = active;
+		addMouseListener(this);
 	}
 	
 	
@@ -83,6 +84,10 @@ class boardCanvas extends Canvas implements MouseListener {
 		//Draw top part
 		g.setColor(Color.white);
 		g.fillRect(0, 0, d.width, TEXT_BAR_HEIGHT);
+		
+		FontMetrics fm = g.getFontMetrics(g.getFont());
+		int xs = d.width/2 - fm.stringWidth("Hello")/2 + 1;
+		g.drawString("Hello", xs, 0);
 		
 		//Paint Board
 		for (int y = 0; y < NUM_COLUMNS; y++) {
@@ -111,9 +116,10 @@ class boardCanvas extends Canvas implements MouseListener {
 		g.fillRect(0, TEXT_BAR_HEIGHT + (NUM_ROWS * HEIGHT_RECTANGLE), d.width, TEXT_BAR_HEIGHT);
 	}
 
-	@Override
+
 	public void mousePressed(MouseEvent e) {
 		Point p = e.getPoint();
+		System.out.println(p);
 
 	}
 	
