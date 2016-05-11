@@ -18,37 +18,21 @@ public class Battleship extends Applet implements ActionListener {
 	
 	
 	public void init() {
-		Canvas leftCanvas = new boardCanvas(true);
-		Canvas rightCanvas = new boardCanvas(true);
+		boardCanvas leftCanvas = new boardCanvas(true);
+		boardCanvas rightCanvas = new boardCanvas(true);
 		setLayout(new GridLayout(1,2));
+		leftCanvas.makeOpponentScreen();
 		add(leftCanvas);
 		add(rightCanvas);
 		
 	}
 	
-	public void startGame() {
+	public void startTwoPlayerGame() {
 		
 		
 		
 		
 	}
-
-	/*private void createButtons() {
-		// Creates buttons in the button arrays and adds them to the correct panels
-		for (int y = 0; y < NUM_COLUMNS; y++) {
-			for (int x = 0; x < NUM_ROWS; x++) {
-				playerBoardButtons[x][y] = new Button();
-				playerBoardButtons[x][y].setLabel(x + "," + y);
-				playerPanel.add(playerBoardButtons[x][y]);
-				opponentBoardButtons[x][y] = new Button();
-				opponentBoardButtons[x][y].setLabel(x + "," + y);
-				opponentPanel.add(opponentBoardButtons[x][y]);
-			}
-		}
-	}
-	*/
-	
-	
 
 	
 	public void actionPerformed(ActionEvent e) {
@@ -68,12 +52,21 @@ class boardCanvas extends Canvas implements MouseListener {
 	protected int WIDTH_RECTANGLE = 30;
 	protected int HEIGHT_RECTANGLE = 30;
 	protected int TEXT_BAR_HEIGHT = 15;
-	protected boolean isActive;
+	protected int state;
+	protected final int ADD_STATE = 0;
+	protected final int PLAYER_STATE = 1;
+	protected final int OPPONENT_STATE = 2;
+	
 	
 	public boardCanvas(boolean active) {
 		board = new Board();
-		isActive = active;
 		addMouseListener(this);
+		state = -1;
+		board.addShip(new Ship(3, 0, 2, 0, 0), 0);
+		board.addShip(new Ship(3, 0, 2, 1, 1), 1);
+		board.addShip(new Ship(3, 0, 2, 2, 2), 2);
+		board.addShip(new Ship(3, 0, 2, 3, 3), 3);
+		board.addShip(new Ship(3, 0, 2, 4, 4), 4);
 	}
 	
 	
@@ -85,9 +78,8 @@ class boardCanvas extends Canvas implements MouseListener {
 		g.setColor(Color.white);
 		g.fillRect(0, 0, d.width, TEXT_BAR_HEIGHT);
 		
-		FontMetrics fm = g.getFontMetrics(g.getFont());
-		int xs = d.width/2 - fm.stringWidth("Hello")/2 + 1;
-		g.drawString("Hello", xs, 0);
+		
+		g.drawString("Hello", 30, 30);
 		
 		//Paint Board
 		for (int y = 0; y < NUM_COLUMNS; y++) {
@@ -97,8 +89,11 @@ class boardCanvas extends Canvas implements MouseListener {
 				switch(board.get(x, y)) {
 					case 0: g.setColor(Color.blue); //Ocean
 							break;
-					case 1: if (isActive)
-								g.setColor(Color.gray); //Ship
+					case 1: if (state != OPPONENT_STATE) {
+								g.setColor(Color.gray); //Ship 
+							} else {
+								g.setColor(Color.blue); //Ships hidden to opponent
+							}
 							break;
 					case 2: g.setColor(Color.red); //Hit
 							break;
@@ -118,24 +113,76 @@ class boardCanvas extends Canvas implements MouseListener {
 
 
 	public void mousePressed(MouseEvent e) {
-		Point p = e.getPoint();
-		System.out.println(p);
-
+		int x = resolveX(e);
+		int y = resolveY(e);
+		
+		System.out.print("(" + x + "," + y + ")");
+		
+		if (state == ADD_STATE) {
+			
+		} else if (state == OPPONENT_STATE) {
+			if ((x != -1) && (y != -1)) {
+				board.shot(x, y);
+				repaint();
+			}
+		}
+		
 	}
 	
 	//Methods called by main applet 
-	public void addShips(){
+	public void addShips() {
+		state = ADD_STATE;
+		
+		//update text instructions
+	}
+	
+	public void makePlayerScreen() {
+		state = PLAYER_STATE;	
+		
+		//update text instructions
 		
 	}
 	
-	public void makeActive(){
-		isActive = true;
+	public void makeOpponentScreen(){
+		state = OPPONENT_STATE;
+		
+		//update text instructions
 		
 	}
 	
-	public void makeInactive(){
-		isActive = false;
+	private int resolveX(MouseEvent e) {
+		Point p = e.getPoint();
+
+        // check if clicked in box area
+
+        int x = p.x;
+
+        if (x >= 0 && x < NUM_COLUMNS*WIDTH_RECTANGLE) {
+            int k = x / WIDTH_RECTANGLE;
+            return k;
+        } else {
+        	return -1;
+        }
+        
+    }
+
+	
+	private int resolveY(MouseEvent e) {
+		Point p = e.getPoint();
+
+        // check if clicked in box area
+
+        int y = p.y - TEXT_BAR_HEIGHT;
+
+        if (y >= 0 && y < NUM_ROWS*HEIGHT_RECTANGLE) {
+            int k = y / HEIGHT_RECTANGLE;
+            return k;
+        } else {
+        	return -1;
+        }
 	}
+	
+ 
 
 	
 	

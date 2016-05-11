@@ -83,6 +83,16 @@ public class Board {
 		return true;
 	}
 	
+	public boolean checkAllSunk() {
+		//goes through array of ships to see if all ships have been sunk
+		for (int i = 0; i < NUM_SHIPS; i++) {
+			if (!isSunk(shipArray[i])) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	
 	
 	
