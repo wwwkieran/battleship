@@ -236,8 +236,9 @@ class boardCanvas extends Canvas implements MouseListener {
 			//let user undo
 			if (currentShipStartCoords[0] == x && currentShipStartCoords[1] == y) {
 				addShips();
-			}else if ((currentShipStartCoords[1] == y && Math.abs(x-currentShipStartCoords[0]) == SHIP_LENGTHS[currentShip]) 
-					|| (currentShipStartCoords[0] == x && Math.abs(y-currentShipStartCoords[1]) == SHIP_LENGTHS[currentShip])
+				repaint();
+			}else if ((currentShipStartCoords[1] == y && Math.abs(x-currentShipStartCoords[0]) == SHIP_LENGTHS[currentShip]-1) 
+					|| (currentShipStartCoords[0] == x && Math.abs(y-currentShipStartCoords[1]) == SHIP_LENGTHS[currentShip]-1)
 					&& nothingInBetween(currentShipStartCoords[0], currentShipStartCoords[1], x, y)) {
 				//place ship
 				board.addShip(new Ship(currentShipStartCoords[0], x, currentShipStartCoords[1], y), currentShip);
