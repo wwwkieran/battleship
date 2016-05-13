@@ -132,6 +132,7 @@ class boardCanvas extends Canvas implements MouseListener {
 	protected int WIDTH_RECTANGLE = 30;
 	protected int HEIGHT_RECTANGLE = 30;
 	protected int TEXT_BAR_HEIGHT = 15;
+	protected int SMALL_BOX_EDGE = 15;
 	protected int state;
 	protected final int END_STATE = 0;
 	protected final int PLAYER_STATE = 1;
@@ -164,7 +165,7 @@ class boardCanvas extends Canvas implements MouseListener {
 		Dimension d = getSize();
 
 		//Determine padding of board
-		leftPadding = (int) ((d.width/2) - (5.5 * WIDTH_RECTANGLE));
+		leftPadding = 30;
 				
 		//Draw top part
 		g.setColor(Color.white);
@@ -208,6 +209,30 @@ class boardCanvas extends Canvas implements MouseListener {
 		g.setFont(new Font("TimesRoman", Font.PLAIN, 15));
 		g.setColor(Color.black);
 		g.drawString(currentBottomBarText, leftPadding, TEXT_BAR_HEIGHT + (NUM_ROWS * HEIGHT_RECTANGLE) + TEXT_BAR_HEIGHT);
+		
+		//Draw side part
+		paintShipInfo(g, (2*leftPadding) + (10*WIDTH_RECTANGLE),  TEXT_BAR_HEIGHT + (int)(5*HEIGHT_RECTANGLE - 4.5 * SMALL_BOX_EDGE));
+	}
+	
+	public void paintShipInfo(Graphics g, int x, int y) {
+		int currentx;
+		int currenty;
+		for (int i = 0; i < NUM_SHIPS; i++) {
+			currenty = y + (i * 2 * SMALL_BOX_EDGE);
+			for (int z = 0; z < SHIP_LENGTHS[i]; z++) {
+				currentx = x + (z * SMALL_BOX_EDGE);
+				
+				if (board.isSunk(i)) {
+					g.setColor(Color.red);
+				} else {
+					g.setColor(Color.gray);
+				}
+				g.fillRect(currentx, currenty, SMALL_BOX_EDGE, SMALL_BOX_EDGE);
+				
+				g.setColor(Color.black);
+				g.drawRect(currentx, currenty, SMALL_BOX_EDGE, SMALL_BOX_EDGE);
+			}
+		}
 	}
 
 

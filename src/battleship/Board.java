@@ -62,7 +62,7 @@ public class Board {
 	public void checkSunk() {
 		//goes through array of ships to check for sunk ships
 		for (int i = 0; i < NUM_SHIPS; i++) {
-			if (isSunk(shipArray[i])) {
+			if (isSunk(i)) {
 				//ship has been sunk, update coords
 				for (int x = shipArray[i].startX(); x <= shipArray[i].endX(); x++) {
 					for (int y = shipArray[i].startY(); y <= shipArray[i].endY(); y++) {
@@ -73,10 +73,11 @@ public class Board {
 		}
 	}
 	
-	private boolean isSunk(Ship theShip) {
+	public boolean isSunk(int shipNumber) {
 		// returns true if ship object is sunk 
 		// meaning all squares of ship are hit(3)
 		// false otherwise
+		Ship theShip = shipArray[shipNumber];
 		for (int x = theShip.startX(); x <= theShip.endX(); x++) {
 			for (int y = theShip.startY(); y <= theShip.endY(); y++) {
 				if (board[x][y] == 1) {
@@ -91,7 +92,7 @@ public class Board {
 	public boolean checkAllSunk() {
 		//goes through array of ships to see if all ships have been sunk
 		for (int i = 0; i < NUM_SHIPS; i++) {
-			if (!isSunk(shipArray[i])) {
+			if (!isSunk(i)) {
 				return false;
 			}
 		}
