@@ -217,7 +217,7 @@ class boardCanvas extends Canvas implements MouseListener {
 	public void paintShipInfo(Graphics g, int x, int y) {
 		int currentx;
 		int currenty;
-		for (int i = 0; i < NUM_SHIPS; i++) {
+		for (int i = 0; i <= currentShip-1; i++) {
 			currenty = y + (i * 2 * SMALL_BOX_EDGE);
 			for (int z = 0; z < SHIP_LENGTHS[i]; z++) {
 				currentx = x + (z * SMALL_BOX_EDGE);
