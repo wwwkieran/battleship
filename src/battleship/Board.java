@@ -25,14 +25,19 @@ public class Board {
 	
 	//instance methods 
 	
-	public void shot(int x, int y) {
+	public int shot(int x, int y) {
 		if (board[x][y] == 1) {
 			//	There was a hit
 			board[x][y] = 2;
 			checkSunk();
-		} else {
+			return 1;
+		} else if (board[x][y] == 0) {
 			//	 was a miss
 			board[x][y] = 3;
+			return 0;
+		} else {
+			//invalid shot (trying to shoot a hit, miss, or sunk)
+			return 2;
 		}
 		
 	}

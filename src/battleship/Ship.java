@@ -10,8 +10,8 @@ public class Ship {
 	
 	//constructor 
 	
-	public Ship (int size, int xstart, int xend, int ystart,  int yend) {
-		this.size = size;
+	public Ship (int xstart, int xend, int ystart,  int yend) {
+		
 
 		//Make sure that xend and yend are bigger than xstart and ystart, repectively
 		if (xstart > xend) {
@@ -29,6 +29,8 @@ public class Ship {
 			this.yStartingCoordinate = ystart;
 			this.yEndingCoordinate = yend;
 		}
+		
+		size = Math.max(xEndingCoordinate-xStartingCoordinate, yEndingCoordinate-yStartingCoordinate);
 	}
 	
 	// instance methods
