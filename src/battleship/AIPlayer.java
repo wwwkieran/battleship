@@ -6,7 +6,7 @@ public class AIPlayer {
 	
 	// instance variables
 	int[] returnArray;
-	int[] crossArray;
+	int crossPoint;
 	boolean [][] alreadyVisited;
 	boolean hasFirstLocation;
 	boolean hasSecondLocation;
@@ -21,7 +21,7 @@ public class AIPlayer {
 	// constructor
 	public AIPlayer() {
 		returnArray = new int[2];
-		crossArray = new int[0];
+		crossPoint = 0;
 		alreadyVisited = new boolean [10][10]; 
 		hasFirstLocation = false;
 		hasSecondLocation = false;
@@ -39,11 +39,11 @@ public class AIPlayer {
 	public int[] aiMakeMove() {
 		// Make initial move
 		if(hasFirstLocation == false) {
-			int pickX = rand.nextInt(10) + 1;
-			int pickY = rand.nextInt(10) + 1;
+			int pickX = rand.nextInt(9) + 0;
+			int pickY = rand.nextInt(9) + 0;
 			while(alreadyVisited[pickX][pickY] == true) { 
-				pickX = rand.nextInt(10) + 1;
-				pickY = rand.nextInt(10) + 1;
+				pickX = rand.nextInt(9) + 0;
+				pickY = rand.nextInt(9) + 0;
 			}
 			currentX = pickX;
 			currentY = pickY;
@@ -73,22 +73,22 @@ public class AIPlayer {
 					currentX -= 1;
 					returnArray[0] = currentX;
 					alreadyVisited[currentX][currentY] = true;
-					crossArray[0] = 1;
+					crossPoint = 1;
 				} else if(nextMove == 2 && alreadyVisited[currentX][currentY + 1] == false) {
 					currentY += 1;
 					returnArray[0] = currentY;
 					alreadyVisited[currentX][currentY] = true;
-					crossArray[0] = 2;
+					crossPoint = 2;
 				} else if(nextMove == 3 && alreadyVisited[currentX + 1][currentY] == false) {
 					currentX += 1;
 					returnArray[0] = currentX;
 					alreadyVisited[currentX][currentY] = true;
-					crossArray[0] = 3;
+					crossPoint = 3;
 				} else if(nextMove == 4 && alreadyVisited[currentX][currentY] == false) {
 					currentY -= 1;
 					returnArray[0] = currentY;
 					alreadyVisited[currentX][currentY] = true;
-					crossArray[0] = 4;
+					crossPoint = 4;
 				}  
 			
 			} else if(hitState == 1) {
@@ -97,20 +97,19 @@ public class AIPlayer {
 			
 		} else { // the hunt beings...
 			if(hitState == 1 && isSunk == false) {
-				if(crossArray[0] == 1) { // hit was east
+				if(crossPoint == 1) { // hit was east
 					currentX -= 1;
 					returnArray[0] = currentX;
 					alreadyVisited[currentX][currentY] = true;
-				} else if(crossArray[0] == 2) { // hit was north
+				} else if(crossPoint == 2) { // hit was north
 					currentY += 1;
 					returnArray[0] = currentY;
 					alreadyVisited[currentX][currentY] = true;
-					crossArray[0] = 2;
-				} else if(crossArray[0] == 3) { // hit was west 
+				} else if(crossPoint == 3) { // hit was west 
 					currentX += 1;
 					returnArray[0] = currentX;
 					alreadyVisited[currentX][currentY] = true;
-				} else { // hit was south
+				} else if(crossPoint == 4){ // hit was south
 					currentY -= 1;
 					returnArray[0] = currentY;
 					alreadyVisited[currentX][currentY] = true;
@@ -120,14 +119,14 @@ public class AIPlayer {
 				currentX = firstX;
 				currentY = firstY;
 				
-				if(crossArray[0] == 1) { // hit was east
-					crossArray[0] = 4;
-				} else if(crossArray[0] == 2) { // hit was north
-					crossArray[0] = 3;
-				} else if(crossArray[0] == 3) { // hit was west 
-					crossArray[0] = 2;
+				if(crossPoint == 1) { // hit was east
+					crossPoint = 4;
+				} else if(crossPoint == 2) { // hit was north
+					crossPoint = 3;
+				} else if(crossPoint == 3) { // hit was west 
+					crossPoint = 2;
 				} else { // hit was south
-					crossArray[0] = 1;
+					crossPoint = 1;
 				}
 			}
 		}
