@@ -3,6 +3,7 @@ package battleship;
 import java.applet.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Random;
 
 @SuppressWarnings("serial")
 
@@ -23,6 +24,11 @@ public class Battleship extends Applet {
 	protected boolean gameOver;
 	protected boolean shipsAdded;
 	protected AIPlayer AI;
+	protected AudioClip explosionSound;
+	protected final int NUM_SHIPS = 5;
+	protected final int[] SHIP_LENGTHS = {5,4,3,3,2};
+	protected Random rand;
+	protected int numSunkByAI;
 
 	public void init() {
 		/* Initializes the key variables required for the applet and displays the start screen */
@@ -30,9 +36,11 @@ public class Battleship extends Applet {
 		opponentCanvas = new boardCanvas(this);
 		notifCanvas = new passCanvas(this);
 		startCanvas = new homeCanvas(this);
+		explosionSound = getAudioClip(getCodeBase(), "explosion.au");
+		rand = new Random();
 		startScreen();
 	}
-	
+
 	public void startScreen() {
 		/* Displays the start screen, where users can select either a 1 player or 2 player game */
 		removeAll();
@@ -40,23 +48,24 @@ public class Battleship extends Applet {
 		add(startCanvas);
 		revalidate();
 	}
-	
+
 	public void playTwoPlayerGame() {
 		/* Starts a two player game */
 		reset();
 		gameType = TWO_PLAYER_GAME;
 		nextTurn();
-		
+
 	}
-	
+
 	public void playOnePlayerGame() {
 		/* Starts a one player game */
 		reset();
 		gameType = ONE_PLAYER_GAME;
 		AI = new AIPlayer();
+		numSunkByAI = 0;
 		presentGame();
 	}
-	
+
 	public void reset() {
 		/* Resets the key variables required for the applet so that a new game can be played */
 		playerCanvas.reset();
@@ -90,23 +99,39 @@ public class Battleship extends Applet {
 			}
 	}
 
+	public void playExplosion() {
+		explosionSound.play();
+	}
+
 	public void AIMove() {
-		System.out.println("AI Move");
 		int[] move = AI.aiMakeMove();
-		
+
 		int moveResult = playerCanvas.passInMove(move);
-		
+
 		if (moveResult == 1) {
 			//hit
 			AI.isHit();
 			playerCanvas.repaint();
+			playExplosion();
+			// Check if all AI sunk a ship
+			if (playerCanvas.checkNumSunk() != numSunkByAI) {
+				AI.isSunk();
+				// Check if AI won
+				if (playerCanvas.checkAllSunk()) {
+					// AI has won
+					playerCanvas.AIwon();
+					opponentCanvas.AIwon();
+				}
+			}
 			// AI gets another move
 			AIMove();
 		} 
+		// AI had miss
+		AI.isMiss();
 		playerCanvas.repaint();
-		
+
 	}
-	
+
 	public void nextTurn() {
 		// this happens in both single and two player mode
 		switch (currentPlayer) {
@@ -114,14 +139,53 @@ public class Battleship extends Applet {
 			case 1: currentPlayer = 2; break;
 			case 2: currentPlayer = 1; break;
 		}
-		
+
 		if (gameType == ONE_PLAYER_GAME) {
 			if (!shipsAdded) {
 				// Add ships to opponent board
-				
+				for (int i = 0; i < NUM_SHIPS;) {
+					int startx;
+					int endx;
+					int starty;
+					int endy;
+
+					startx = rand.nextInt(9);
+					endx = rand.nextInt(9);
+
+					while((startx != endx) && (Math.abs(endx-startx) != SHIP_LENGTHS[i]-1)) {
+						endx = rand.nextInt(9);
+					}
+
+					// endx is either same as startx or right length away from x
+					if (startx == endx) {
+						// Start x and end x are same, so the ship must be vertical
+						starty = rand.nextInt(9);
+						endy = SHIP_LENGTHS[i]-1 + starty;
+
+						if (endy > 9) {
+							endy = starty - SHIP_LENGTHS[i]-1;
+						}
+
+
+					} else {
+						// Start x and end x are right distance apart, so ship is horizontal
+						// This means the y co-ords are the same...
+						starty = rand.nextInt(9);
+						endy = starty;
+					}
+
+					//Check that this ship won't intersect any other ships
+					if (opponentCanvas.nothingInBetween(startx, starty, endx, endy)) {
+						opponentCanvas.placeShip(startx, starty, endx, endy, i);
+						i++;
+					}
+					//If it does, then just repeat the same steps to try again...
+				}
+
+
 				// All ships have been added
 				shipsAdded = true;
-				
+
 				// Set up window
 				removeAll();
 				setLayout(new GridLayout(2,1));
@@ -130,7 +194,7 @@ public class Battleship extends Applet {
 				add(playerCanvas);
 				add(opponentCanvas);
 				revalidate();
-				
+
 			} else {
 				opponentCanvas.setUnclickable();
 				opponentCanvas.repaint();
@@ -138,8 +202,8 @@ public class Battleship extends Applet {
 				currentPlayer = 1;
 				opponentCanvas.setClickable();
 			}
-			
-			
+
+
 		} else if (gameType == TWO_PLAYER_GAME) {
 			//Show Message
 			removeAll();
@@ -152,7 +216,7 @@ public class Battleship extends Applet {
 			playerCanvas = opponentCanvas;
 			opponentCanvas = temp;
 		}
-		
+
 
 	}
 
@@ -166,7 +230,7 @@ public class Battleship extends Applet {
 		add(notifCanvas);
 		revalidate();
 	}
-	
+
 	public int getGameType() {
 		return gameType;
 	}
@@ -222,7 +286,7 @@ class boardCanvas extends Canvas implements MouseListener {
 
 		// Determine padding of board
 		leftPadding = 30;
-				
+
 		// Draw top part
 		g.setColor(Color.white);
 		g.fillRect(0, 0, d.width, d.height);
@@ -265,11 +329,11 @@ class boardCanvas extends Canvas implements MouseListener {
 		g.setFont(new Font("TimesRoman", Font.PLAIN, 15));
 		g.setColor(Color.black);
 		g.drawString(currentBottomBarText, leftPadding, TEXT_BAR_HEIGHT + (NUM_ROWS * HEIGHT_RECTANGLE) + TEXT_BAR_HEIGHT);
-		
+
 		//Draw side part
 		paintShipInfo(g, (2*leftPadding) + (10*WIDTH_RECTANGLE),  TEXT_BAR_HEIGHT + (int)(5*HEIGHT_RECTANGLE - 4.5 * SMALL_BOX_EDGE));
 	}
-	
+
 	public void paintShipInfo(Graphics g, int x, int y) {
 		/* Draws the ship tracker at location x, y. The ship tracker displays a player's ships, red if a ship has been sunk and blue otherwise. */
 		int currentx;
@@ -278,21 +342,21 @@ class boardCanvas extends Canvas implements MouseListener {
 			currenty = y + (i * 2 * SMALL_BOX_EDGE);
 			for (int z = 0; z < SHIP_LENGTHS[i]; z++) {
 				currentx = x + (z * SMALL_BOX_EDGE);
-				
+
 				if (board.isSunk(i)) {
 					g.setColor(Color.red);
 				} else {
 					g.setColor(Color.gray);
 				}
 				g.fillRect(currentx, currenty, SMALL_BOX_EDGE, SMALL_BOX_EDGE);
-				
+
 				g.setColor(Color.black);
 				g.drawRect(currentx, currenty, SMALL_BOX_EDGE, SMALL_BOX_EDGE);
 			}
 		}
 	}
 
-	
+
 	public void mousePressed(MouseEvent e) {
 		int x = resolveX(e);
 		int y = resolveY(e);
@@ -323,7 +387,7 @@ class boardCanvas extends Canvas implements MouseListener {
 			if (currentShipStartCoords[0] == x && currentShipStartCoords[1] == y) {
 				addShips();
 				repaint();
-			} else if ((currentShipStartCoords[1] == y && Math.abs(x-currentShipStartCoords[0]) == SHIP_LENGTHS[currentShip]-1) 
+			} else if ((currentShipStartCoords[1] == y && Math.abs(x-currentShipStartCoords[0]) == SHIP_LENGTHS[currentShip]-1)
 					|| (currentShipStartCoords[0] == x && Math.abs(y-currentShipStartCoords[1]) == SHIP_LENGTHS[currentShip]-1)
 					&& nothingInBetween(currentShipStartCoords[0], currentShipStartCoords[1], x, y)) {
 				//place ship
@@ -345,7 +409,7 @@ class boardCanvas extends Canvas implements MouseListener {
 					currentBottomBarText = "Miss :( Click anywhere to continue.";
 					repaint();
 					end = true;
-					
+
 					// If it's single player mode, we don't have to wait for a click to go to the next turn...
 					if (parent.getGameType() == ONE_PLAYER_GAME) {
 						parent.nextTurn();
@@ -353,7 +417,7 @@ class boardCanvas extends Canvas implements MouseListener {
 					}
 				} else if (shotResult == 1) {
 					//Shot was a hit
-
+					parent.playExplosion();
 					//Check if this resulted in a win
 					if (board.checkAllSunk()) {
 						currentBottomBarText = "You have won! Click to continue.";
@@ -376,10 +440,29 @@ class boardCanvas extends Canvas implements MouseListener {
 		}
 
 	}
-	
-	private boolean nothingInBetween(int startx, int starty, int endx, int endy) {
+
+	public boolean checkAllSunk() {
+		return board.checkAllSunk();
+	}
+
+	public int checkNumSunk() {
+		int numSunk = 0;
+		for (int i = 0; i < NUM_SHIPS; i++) {
+			if (board.isSunk(i))
+				numSunk++;
+		}
+		return numSunk;
+	}
+
+	public void AIwon() {
+		/* Called if the AI has won */
+		gameOver = true;
+		currentBottomBarText = "AI has won. Click to continue.";
+	}
+
+	public boolean nothingInBetween(int startx, int starty, int endx, int endy) {
 		/* Returns false if there are any ship boxes between two points. True otherwise. */
-		
+
 		// Ensure that endx is bigger
 		if (startx > endx) {
 			int temp = endx;
@@ -392,7 +475,7 @@ class boardCanvas extends Canvas implements MouseListener {
 			endy = starty;
 			starty = temp;
 		}
-		
+
 		// Check for ship squares
 		for (int y = starty; y <= endy; y++) {
 			for (int x = startx; x <= endx; x++) {
@@ -403,6 +486,11 @@ class boardCanvas extends Canvas implements MouseListener {
 		}
 		// Otherwise, there were no ship squares in between
 		return true;
+	}
+
+	public void placeShip(int startx, int starty, int endx, int endy, int shipNum) {
+		board.addShip(new Ship(startx, endx, starty, endy), shipNum);
+		currentShip = shipNum+1;
 	}
 
 	public void addShips() {
@@ -418,20 +506,20 @@ class boardCanvas extends Canvas implements MouseListener {
 			currentBottomBarText = "You have finished placing all of your ships. Click anywhere to continue.";
 			end = true;
 		}
-		
+
 	}
-	
+
 	public int passInMove(int[] coords) {
 		/* For the applet to pass in a move from the AI */
 		return board.shot(coords[0], coords[1]);
 	}
-	
+
 	public void setClickable() {
 		/* Makes the canvas clickable */
 		unclickable = false;
 		currentBottomBarText = "Click a box to fire upon!";
 	}
-	
+
 	public void setUnclickable() {
 		/* Makes the canvas unclickable */
 		unclickable = true;
@@ -453,7 +541,7 @@ class boardCanvas extends Canvas implements MouseListener {
 		currentTopBarText = "Opponent";
 		currentBottomBarText = "Click a box to fire upon!";
 	}
-	
+
 	public void reset() {
 		/* Resets the key variables required for the board so that a new game can be played */
 		board = new Board();
@@ -507,7 +595,7 @@ class boardCanvas extends Canvas implements MouseListener {
 } class passCanvas extends Canvas implements MouseListener {
 	protected Battleship parent;
 	protected String message = "";
-	protected boolean gameOver; 
+	protected boolean gameOver;
 	Image fireworks;
 
 	public passCanvas(Battleship p) {
@@ -515,6 +603,15 @@ class boardCanvas extends Canvas implements MouseListener {
 		parent = p;
 		addMouseListener(this);
 		gameOver = false;
+
+		// Gif drawing was adapted from Real How To's guide for displaying a gif in a canvas.
+		MediaTracker media = new MediaTracker(this);
+	    fireworks = Toolkit.getDefaultToolkit().getImage("fireworks.gif");
+	    media.addImage(fireworks, 0);
+	    try {
+	      media.waitForID(0);
+	      }
+	    catch (Exception e) {}
 
 	}
 
@@ -539,7 +636,11 @@ class boardCanvas extends Canvas implements MouseListener {
 		g.fillRect(0, 0, d.width, d.height);
 		g.setColor(Color.white);
 		g.drawString(message, 30, 50);
-		
+		// Fireworks for win
+		if (gameOver) {
+			g.drawImage(fireworks, 30, 70, this);
+		}
+
 	}
 
 
@@ -559,45 +660,45 @@ class boardCanvas extends Canvas implements MouseListener {
 	public void mouseReleased(MouseEvent e) {}
 	public void mouseEntered(MouseEvent e) {}
 	public void mouseExited(MouseEvent e) {}
-	
+
 } @SuppressWarnings("serial")
 class homeCanvas extends Canvas implements MouseListener {
 	protected Battleship parent;
 	protected final int BUTTON_WIDTH = 120;
 	protected final int BUTTON_HEIGHT = 30;
-	
+
 	homeCanvas(Battleship p) {
 		/* Initializes the instance variables needed for a homeCanvas */
 		parent  = p;
 		addMouseListener(this);
 	}
-	
+
 	public void paint(Graphics g) {
 		/* Draws a blue background, with a title "BATTLESHIP" and two buttons to start a 1-player or a 2-player game. */
 		Dimension d = getSize();
 		g.setColor(Color.blue);
 		g.fillRect(0, 0, d.width, d.height);
-		
-		//Draw title 
+
+		//Draw title
 		g.setFont(new Font("TimesRoman", Font.PLAIN, 30));
 		g.setColor(Color.white);
 		centerString(g, "BATTLESHIP", d.width/2, d.height/4);
-		
+
 		//Draw buttons
 		g.setColor(Color.white);
 		g.fillRect(d.width/2 - BUTTON_WIDTH/2, d.height/2 - BUTTON_HEIGHT/2, BUTTON_WIDTH, BUTTON_HEIGHT);
 		g.setFont(new Font("TimesRoman", Font.PLAIN, 20));
 		g.setColor(Color.blue);
 		centerString(g, "One Player", d.width/2, d.height/2);
-		
+
 		g.setColor(Color.white);
 		g.fillRect(d.width/2 - BUTTON_WIDTH/2, 3 * d.height/4 - BUTTON_HEIGHT/2, BUTTON_WIDTH, BUTTON_HEIGHT);
 		g.setFont(new Font("TimesRoman", Font.PLAIN, 20));
 		g.setColor(Color.blue);
 		centerString(g, "Two Players", d.width/2, 3 * d.height/4);
-		
+
 	}
-	
+
 	public static void centerString(Graphics g, String s, int x, int y) {
 		/* Helper method to draw a string centered at x, y. Adapted from a method provided by Prof Scharstein in HW6. */
 		FontMetrics fm = g.getFontMetrics(g.getFont());
@@ -618,7 +719,7 @@ class homeCanvas extends Canvas implements MouseListener {
 			//Second button
 			parent.playTwoPlayerGame();
 		}
-		
+
 	}
 
 	// Additional methods required to implement MouseListener
@@ -626,5 +727,5 @@ class homeCanvas extends Canvas implements MouseListener {
 	public void mouseReleased(MouseEvent e) {}
 	public void mouseEntered(MouseEvent e) {}
 	public void mouseExited(MouseEvent e) {}
-	
+
 }
