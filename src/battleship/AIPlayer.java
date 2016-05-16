@@ -118,7 +118,7 @@ public class AIPlayer {
 			} else if(hitState == 0 && isSunk == false) {
 				currentX = firstX;
 				currentY = firstY;
-				
+				hitState = 1;
 				if(crossPoint == 1) { // hit was east
 					crossPoint = 4;
 				} else if(crossPoint == 2) { // hit was north
