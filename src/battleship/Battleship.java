@@ -6,14 +6,14 @@ import java.awt.event.*;
 
 @SuppressWarnings("serial")
 
-public class Battleship extends Applet implements ActionListener {
+public class Battleship extends Applet {
 
 
 	protected Button startButton;
 	protected Button[][] playerBoardButtons;
 	protected Button[][] opponentBoardButtons;
-	protected boardCanvas leftCanvas;
-	protected boardCanvas rightCanvas;
+	protected boardCanvas playerCanvas;
+	protected boardCanvas opponentCanvas;
 	protected passCanvas notifCanvas;
 	protected homeCanvas startCanvas;
 	protected int currentPlayer; //In two player mode, 1 = player 1 and 2 = player 2
@@ -22,16 +22,19 @@ public class Battleship extends Applet implements ActionListener {
 	protected final int TWO_PLAYER_GAME = 2;
 	protected boolean gameOver;
 	protected boolean shipsAdded;
+	protected AIPlayer AI;
 
 	public void init() {
-		leftCanvas = new boardCanvas(this);
-		rightCanvas = new boardCanvas(this);
+		/* Initializes the key variables required for the applet and displays the start screen */
+		playerCanvas = new boardCanvas(this);
+		opponentCanvas = new boardCanvas(this);
 		notifCanvas = new passCanvas(this);
 		startCanvas = new homeCanvas(this);
 		startScreen();
 	}
 	
 	public void startScreen() {
+		/* Displays the start screen, where users can select either a 1 player or 2 player game */
 		removeAll();
 		setLayout(new GridLayout(1,1));
 		add(startCanvas);
@@ -39,71 +42,122 @@ public class Battleship extends Applet implements ActionListener {
 	}
 	
 	public void playTwoPlayerGame() {
-		leftCanvas.reset();
-		rightCanvas.reset();
-		currentPlayer = 0;
-		gameOver = false;
-		shipsAdded = false;
+		/* Starts a two player game */
+		reset();
 		gameType = TWO_PLAYER_GAME;
 		nextTurn();
 		
 	}
 	
 	public void playOnePlayerGame() {
-		leftCanvas.reset();
-		rightCanvas.reset();
+		/* Starts a one player game */
+		reset();
+		gameType = ONE_PLAYER_GAME;
+		AI = new AIPlayer();
+		presentGame();
+	}
+	
+	public void reset() {
+		/* Resets the key variables required for the applet so that a new game can be played */
+		playerCanvas.reset();
+		opponentCanvas.reset();
 		currentPlayer = 0;
 		gameOver = false;
 		shipsAdded = false;
-		gameType = ONE_PLAYER_GAME;
-		nextTurn();
 	}
 
 	public void presentGame() {
-		
+		/* Places the player and opponent boards on the screen */
 		if (!shipsAdded) {
+			// Only display one board for ship placement
 			removeAll();
 			setLayout(new GridLayout(1,1));
-			leftCanvas.addShips();
-			add(leftCanvas);
+			playerCanvas.addShips();
+			add(playerCanvas);
 			revalidate();
 			if (currentPlayer == 2) {
 				shipsAdded = true;
 			}
-		} else {//Play game
+		} else {
+			//Play game
 			removeAll();
 			setLayout(new GridLayout(2,1));
-			leftCanvas.makePlayerScreen();
-			rightCanvas.makeOpponentScreen();
-			add(leftCanvas);
-			add(rightCanvas);
+			playerCanvas.makePlayerScreen();
+			opponentCanvas.makeOpponentScreen();
+			add(playerCanvas);
+			add(opponentCanvas);
 			revalidate();
 			}
-		
-
 	}
 
+	public void AIMove() {
+		System.out.println("AI Move");
+		int[] move = AI.aiMakeMove();
+		
+		int moveResult = playerCanvas.passInMove(move);
+		
+		if (moveResult == 1) {
+			//hit
+			AI.isHit();
+			playerCanvas.repaint();
+			// AI gets another move
+			AIMove();
+		}
+		playerCanvas.repaint();
+		
+	}
+	
 	public void nextTurn() {
+		// this happens in both single and two player mode
 		switch (currentPlayer) {
 			case 0: currentPlayer = 1; break;
 			case 1: currentPlayer = 2; break;
 			case 2: currentPlayer = 1; break;
 		}
-		//Show Message
-		removeAll();
-		setLayout(new GridLayout(1,1));
-		notifCanvas.pass(currentPlayer);
-		add(notifCanvas);
-		revalidate();
-		//Swap Canvas Locations
-		boardCanvas temp = leftCanvas;
-		leftCanvas = rightCanvas;
-		rightCanvas = temp;
+		
+		if (gameType == ONE_PLAYER_GAME) {
+			if (!shipsAdded) {
+				// Add ships to opponent board
+				
+				// All ships have been added
+				shipsAdded = true;
+				
+				// Set up window
+				removeAll();
+				setLayout(new GridLayout(2,1));
+				playerCanvas.makePlayerScreen();
+				opponentCanvas.makeOpponentScreen();
+				add(playerCanvas);
+				add(opponentCanvas);
+				revalidate();
+				
+			} else {
+				opponentCanvas.setUnclickable();
+				opponentCanvas.repaint();
+				AIMove();
+				currentPlayer = 1;
+				opponentCanvas.setClickable();
+			}
+			
+			
+		} else if (gameType == TWO_PLAYER_GAME) {
+			//Show Message
+			removeAll();
+			setLayout(new GridLayout(1,1));
+			notifCanvas.pass(currentPlayer);
+			add(notifCanvas);
+			revalidate();
+			//Swap Canvas Locations
+			boardCanvas temp = playerCanvas;
+			playerCanvas = opponentCanvas;
+			opponentCanvas = temp;
+		}
+		
 
 	}
 
 	public void win() {
-		//called by a canvas when a win has occurred
+		/* Called by a canvas when a win has occurred */
 		gameOver = true;
 		//Show Message
 		removeAll();
@@ -112,12 +166,10 @@ public class Battleship extends Applet implements ActionListener {
 		add(notifCanvas);
 		revalidate();
 	}
-
 	
-	public void actionPerformed(ActionEvent e) {
-
+	public int getGameType() {
+		return gameType;
 	}
-
 
 
 
@@ -143,30 +195,35 @@ class boardCanvas extends Canvas implements MouseListener {
 	protected String currentBottomBarText = "";
 	protected boolean end;
 	protected boolean gameOver;
+	protected boolean unclickable;
 	protected int leftPadding;
 	protected final int NUM_SHIPS = 5;
 	protected final int[] SHIP_LENGTHS = {5,4,3,3,2};
 	protected int currentShip;
 	protected int[] currentShipStartCoords;
-	
+	protected final int ONE_PLAYER_GAME = 1;
+	protected final int TWO_PLAYER_GAME = 2;
 
 
 	public boardCanvas(Battleship b) {
+		/* Initializes the instance variables needed for an object */
 		board = new Board();
 		addMouseListener(this);
 		parent = b;
 		state = -1;
+		unclickable = false;
 	}
 
 
 
 	public void paint(Graphics g) {
+		/* Paints a 10 by 10 board based on the information in the Board object and a top and bottom text field */
 		Dimension d = getSize();
 
-		//Determine padding of board
+		// Determine padding of board
 		leftPadding = 30;
 				
-		//Draw top part
+		// Draw top part
 		g.setColor(Color.white);
 		g.fillRect(0, 0, d.width, d.height);
 
@@ -214,6 +271,7 @@ class boardCanvas extends Canvas implements MouseListener {
 	}
 	
 	public void paintShipInfo(Graphics g, int x, int y) {
+		/* Draws the ship tracker at location x, y. The ship tracker displays a player's ships, red if a ship has been sunk and blue otherwise. */
 		int currentx;
 		int currenty;
 		for (int i = 0; i <= currentShip-1; i++) {
@@ -234,18 +292,21 @@ class boardCanvas extends Canvas implements MouseListener {
 		}
 	}
 
-
+	
 	public void mousePressed(MouseEvent e) {
 		int x = resolveX(e);
 		int y = resolveY(e);
 
 		if (end) {
+			// Turn is over
 			end = false;
 			parent.nextTurn();
 		} else if (gameOver) {
+			// Game is over
 			gameOver = false;
 			parent.win();
 		} else if (state == ADD_STATE1) {
+			// Add first point of ship
 			if (board.get(x, y) != 0) {
 				currentBottomBarText = "Invalid. Click somewhere else!";
 				repaint();
@@ -257,11 +318,12 @@ class boardCanvas extends Canvas implements MouseListener {
 				repaint();
 			}
 		} else if (state == ADD_STATE2) {
+			// Add second point of ship
 			//let user undo
 			if (currentShipStartCoords[0] == x && currentShipStartCoords[1] == y) {
 				addShips();
 				repaint();
-			}else if ((currentShipStartCoords[1] == y && Math.abs(x-currentShipStartCoords[0]) == SHIP_LENGTHS[currentShip]-1) 
+			} else if ((currentShipStartCoords[1] == y && Math.abs(x-currentShipStartCoords[0]) == SHIP_LENGTHS[currentShip]-1) 
 					|| (currentShipStartCoords[0] == x && Math.abs(y-currentShipStartCoords[1]) == SHIP_LENGTHS[currentShip]-1)
 					&& nothingInBetween(currentShipStartCoords[0], currentShipStartCoords[1], x, y)) {
 				//place ship
@@ -283,8 +345,12 @@ class boardCanvas extends Canvas implements MouseListener {
 					currentBottomBarText = "Miss :( Click anywhere to continue.";
 					repaint();
 					end = true;
-
-
+					
+					// If it's single player mode, we don't have to wait for a click to go to the next turn...
+					if (parent.getGameType() == ONE_PLAYER_GAME) {
+						parent.nextTurn();
+						end = false;
+					}
 				} else if (shotResult == 1) {
 					//Shot was a hit
 
@@ -299,9 +365,6 @@ class boardCanvas extends Canvas implements MouseListener {
 						repaint();
 						//Player gets to go again, so DO NOT call nextTurn
 					}
-
-					
-
 				} else {
 					//Shot was on an invalid
 
@@ -315,17 +378,22 @@ class boardCanvas extends Canvas implements MouseListener {
 	}
 	
 	private boolean nothingInBetween(int startx, int starty, int endx, int endy) {
+		/* Returns false if there are any ship boxes between two points. True otherwise. */
+		
+		// Ensure that endx is bigger
 		if (startx > endx) {
 			int temp = endx;
 			endx = startx;
 			startx = temp;
 		}
-		
+		// Ensure that endy is bigger
 		if (starty > endy) {
 			int temp = endy;
 			endy = starty;
 			starty = temp;
 		}
+		
+		// Check for ship squares
 		for (int y = starty; y <= endy; y++) {
 			for (int x = startx; x <= endx; x++) {
 				if (board.get(x, y) != 0) {
@@ -333,17 +401,17 @@ class boardCanvas extends Canvas implements MouseListener {
 				}
 			}
 		}
-		
+		// Otherwise, there were no ship squares in between
 		return true;
 	}
 
-	//Methods called by main applet
 	public void addShips() {
+		/* Called by the applet to facilitate the placement of ships. */
 		currentShipStartCoords[0] = -1;
 		currentShipStartCoords[1] = -1;
 		if (currentShip < NUM_SHIPS) {
 			state = ADD_STATE1;
-			//update text instructions
+			// Update text instructions
 			currentTopBarText = "Add Ships";
 			currentBottomBarText = "Click to place the starting point of the " + SHIP_LENGTHS[currentShip] + " box long ship.";
 		} else {
@@ -351,28 +419,43 @@ class boardCanvas extends Canvas implements MouseListener {
 			end = true;
 		}
 		
-
-
+	}
+	
+	public int passInMove(int[] coords) {
+		/* For the applet to pass in a move from the AI */
+		return board.shot(coords[0], coords[1]);
+	}
+	
+	public void setClickable() {
+		/* Makes the canvas clickable */
+		unclickable = false;
+		currentBottomBarText = "Click a box to fire upon!";
+	}
+	
+	public void setUnclickable() {
+		/* Makes the canvas unclickable */
+		unclickable = true;
+		currentBottomBarText = "Waiting for AI to make a move.";
 	}
 
 	public void makePlayerScreen() {
+		/* Sets this board as the Player's board */
 		state = PLAYER_STATE;
 		//update text instructions
 		currentTopBarText = "Player";
 		currentBottomBarText = "These are your ships.";
-
-
 	}
 
-	public void makeOpponentScreen(){
+	public void makeOpponentScreen() {
+		/* Sets this board as the Opponent's board */
 		state = OPPONENT_STATE;
-
 		//update text instructions
 		currentTopBarText = "Opponent";
 		currentBottomBarText = "Click a box to fire upon!";
 	}
 	
 	public void reset() {
+		/* Resets the key variables required for the board so that a new game can be played */
 		board = new Board();
 		state = -1;
 		currentShip = 0;
@@ -382,15 +465,17 @@ class boardCanvas extends Canvas implements MouseListener {
 	}
 
 	private int resolveX(MouseEvent e) {
+		/* Resolves the x-coord of the board box (0-9) in which a MouseEvent occurred. Returns -1 if the MouseEvent was outside of the board. */
 		Point p = e.getPoint();
 
-        // check if clicked in box area
+        // check if clicked in board area
         int x = p.x - leftPadding;
 
         if (x >= 0 && x < NUM_COLUMNS*WIDTH_RECTANGLE) {
             int k = x / WIDTH_RECTANGLE;
             return k;
         } else {
+        	// Not in board
         	return -1;
         }
 
@@ -398,48 +483,43 @@ class boardCanvas extends Canvas implements MouseListener {
 
 
 	private int resolveY(MouseEvent e) {
+		/* Resolves the y-coord of the board box (0-9) in which a MouseEvent occurred. Returns -1 if the MouseEvent was outside of the board. */
 		Point p = e.getPoint();
 
-        // check if clicked in box area
+        // check if clicked in board area
         int y = p.y - TEXT_BAR_HEIGHT;
 
         if (y >= 0 && y < NUM_ROWS*HEIGHT_RECTANGLE) {
             int k = y / HEIGHT_RECTANGLE;
             return k;
         } else {
+        	// Not in board
         	return -1;
         }
 	}
 
-	// Extra methods required to implement mouselistener
-	@Override
-	public void mouseClicked(MouseEvent e) {
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent e) {
-	}
-
-	@Override
-	public void mouseEntered(MouseEvent e) {
-	}
-
-	@Override
-	public void mouseExited(MouseEvent e) {
-	}
+	// Extra methods required to implement MouseListener
+	public void mouseClicked(MouseEvent e) {}
+	public void mouseReleased(MouseEvent e) {}
+	public void mouseEntered(MouseEvent e) {}
+	public void mouseExited(MouseEvent e) {}
 
 } class passCanvas extends Canvas implements MouseListener {
 	protected Battleship parent;
 	protected String message = "";
 	protected boolean gameOver; 
+	Image fireworks;
 
 	public passCanvas(Battleship p) {
+		/* Initializes the instance variables needed for a canvas */
 		parent = p;
 		addMouseListener(this);
 		gameOver = false;
+
 	}
 
 	public void win(int currentPlayer) {
+		/* Called by the applet when a win has occurred. Generates a message and paints the canvas. */
 		message = "Player " + currentPlayer + " has won!" ;
 		repaint();
 		gameOver = true;
@@ -447,20 +527,24 @@ class boardCanvas extends Canvas implements MouseListener {
 	}
 
 	public void pass(int currentPlayer) {
+		/* Called by the applet when the computer must be passed. Generates a message and paints the canvas. */
 		message = "Pass the computer to Player " + currentPlayer + "!";
 		repaint();
 	}
 
 	public void paint(Graphics g) {
+		/* Draws a black background with a message. */
 		Dimension d = getSize();
 		g.setColor(Color.black);
 		g.fillRect(0, 0, d.width, d.height);
 		g.setColor(Color.white);
 		g.drawString(message, 30, 50);
+		
 	}
 
 
 	public void mouseClicked(MouseEvent e) {
+		/* When there is a click, takes the user to the next move, or, if the game is over, back to the home screen. */
 		if (gameOver) {
 			gameOver = false;
 			parent.startScreen();
@@ -469,29 +553,12 @@ class boardCanvas extends Canvas implements MouseListener {
 		}
 	}
 
+	// Methods required to implement MouseListener
 	@Override
-	public void mousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void mouseEntered(MouseEvent e) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void mouseExited(MouseEvent e) {
-
-
-	}
+	public void mousePressed(MouseEvent e) {}
+	public void mouseReleased(MouseEvent e) {}
+	public void mouseEntered(MouseEvent e) {}
+	public void mouseExited(MouseEvent e) {}
 	
 } @SuppressWarnings("serial")
 class homeCanvas extends Canvas implements MouseListener {
@@ -500,11 +567,13 @@ class homeCanvas extends Canvas implements MouseListener {
 	protected final int BUTTON_HEIGHT = 30;
 	
 	homeCanvas(Battleship p) {
+		/* Initializes the instance variables needed for a homeCanvas */
 		parent  = p;
 		addMouseListener(this);
 	}
 	
 	public void paint(Graphics g) {
+		/* Draws a blue background, with a title "BATTLESHIP" and two buttons to start a 1-player or a 2-player game. */
 		Dimension d = getSize();
 		g.setColor(Color.blue);
 		g.fillRect(0, 0, d.width, d.height);
@@ -529,9 +598,8 @@ class homeCanvas extends Canvas implements MouseListener {
 		
 	}
 	
-	// helper method to draw a String centered at x, y
-	// Adapted from a metheod provided by Prof Scharstein in HW6
 	public static void centerString(Graphics g, String s, int x, int y) {
+		/* Helper method to draw a string centered at x, y. Adapted from a method provided by Prof Scharstein in HW6. */
 		FontMetrics fm = g.getFontMetrics(g.getFont());
 		int xs = x - fm.stringWidth(s)/2 + 1;
 		int ys = y + fm.getAscent()/3 + 1;
@@ -540,6 +608,7 @@ class homeCanvas extends Canvas implements MouseListener {
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
+		/* Called every time there is a mouse click in the canvas. If the click is within a button, a method in the applet is called to start that type of game. */
 		Point p = e.getPoint();
 		Dimension d = getSize();
 		if (p.x > (d.width/2 - BUTTON_WIDTH/2) && p.x <  (d.width/2 + BUTTON_WIDTH/2) && p.y > (d.height/2 - BUTTON_HEIGHT/2) && p.y < (d.height/2 + BUTTON_HEIGHT/2)) {
@@ -552,28 +621,10 @@ class homeCanvas extends Canvas implements MouseListener {
 		
 	}
 
-	@Override
-	public void mousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mouseEntered(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mouseExited(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	// Additional methods required to implement MouseListener
+	public void mousePressed(MouseEvent e) {}
+	public void mouseReleased(MouseEvent e) {}
+	public void mouseEntered(MouseEvent e) {}
+	public void mouseExited(MouseEvent e) {}
 	
 }

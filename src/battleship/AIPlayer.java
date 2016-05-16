@@ -3,7 +3,7 @@ package battleship;
 import java.util.*;
 
 public class AIPlayer {
-	
+
 	// instance variables
 	int[] returnArray;
 	int crossPoint;
@@ -17,7 +17,7 @@ public class AIPlayer {
 	protected int currentY;
 	protected int hitState;
 	Random rand;
-	
+
 	// constructor
 	public AIPlayer() {
 		returnArray = new int[2];
@@ -37,8 +37,8 @@ public class AIPlayer {
 	 * intArray[0] = x and intArray[1] = y 
 	 */
 	public int[] aiMakeMove() {
-		// Make initial move
 		if(hasFirstLocation == false) {
+
 			int pickX = rand.nextInt(9) + 0;
 			int pickY = rand.nextInt(9) + 0;
 			while(alreadyVisited[pickX][pickY] == true) { 
@@ -48,7 +48,7 @@ public class AIPlayer {
 			currentX = pickX;
 			currentY = pickY;
 			alreadyVisited[pickX][pickY] = true;	
-			
+
 			if(hitState == 0) { // initial move was a miss
 				hasFirstLocation = false;
 				currentX = 0;
@@ -62,13 +62,13 @@ public class AIPlayer {
 				returnArray[0] = pickX;
 				returnArray[1] = pickY;
 			}
-		
-		// initial move was a hit
+
+			// initial move was a hit
 		} else if(hasSecondLocation == false) {
 			if (hitState == 0) {
 				// randomly chooses adjacent points to hit
 				int nextMove = rand.nextInt(4) + 1;
-				
+
 				if(nextMove == 1 && alreadyVisited[currentX - 1][currentY] == false) {
 					currentX -= 1;
 					returnArray[0] = currentX;
@@ -90,51 +90,31 @@ public class AIPlayer {
 					alreadyVisited[currentX][currentY] = true;
 					crossPoint = 4;
 				}  
-			
+
 			} else if(hitState == 1) {
 				hasSecondLocation = true;
 			}
-			
-		} else { // the hunt beings...
-			if(hitState == 1 && isSunk == false) {
-				if(crossPoint == 1) { // hit was east
-					currentX -= 1;
-					returnArray[0] = currentX;
-					alreadyVisited[currentX][currentY] = true;
-				} else if(crossPoint == 2) { // hit was north
-					currentY += 1;
-					returnArray[0] = currentY;
-					alreadyVisited[currentX][currentY] = true;
-				} else if(crossPoint == 3) { // hit was west 
-					currentX += 1;
-					returnArray[0] = currentX;
-					alreadyVisited[currentX][currentY] = true;
-				} else if(crossPoint == 4){ // hit was south
-					currentY -= 1;
-					returnArray[0] = currentY;
-					alreadyVisited[currentX][currentY] = true;
-				}
-			
-			} else if(hitState == 0 && isSunk == false) {
-				currentX = firstX;
-				currentY = firstY;
-				hitState = 1;
-				if(crossPoint == 1) { // hit was east
-					crossPoint = 4;
-				} else if(crossPoint == 2) { // hit was north
-					crossPoint = 3;
-				} else if(crossPoint == 3) { // hit was west 
-					crossPoint = 2;
-				} else { // hit was south
-					crossPoint = 1;
-				}
+		} else if(hitState == 0 && isSunk == false) {
+			currentX = firstX;
+			currentY = firstY;
+			hitState = 1;
+			if(crossPoint == 1) { // hit was east
+				crossPoint = 4;
+			} else if(crossPoint == 2) { // hit was north
+				crossPoint = 3;
+			} else if(crossPoint == 3) { // hit was west 
+				crossPoint = 2;
+			} else { // hit was south
+				crossPoint = 1;
 			}
+
 		}
+
 		return returnArray;
 	}
 
-	
-	
+
+
 	// hit state methods
 	public void isHit() {
 		hitState = 1;			
@@ -145,7 +125,6 @@ public class AIPlayer {
 	public void isMiss() {
 		hitState = 0;			
 	}
-	
-	
+
+
 }
-		
