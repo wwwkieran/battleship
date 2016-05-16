@@ -8,14 +8,12 @@ public class AIPlayer {
 	int[] returnArray;
 	int crossPoint;
 	boolean [][] alreadyVisited;
-	boolean hasFirstLocation;
-	boolean hasSecondLocation;
-	boolean isSunk;
 	protected int firstX;
 	protected int firstY;
 	protected int currentX;
 	protected int currentY;
 	protected int hitState;
+	protected int nextMove;
 	Random rand;
 
 	// constructor
@@ -23,108 +21,146 @@ public class AIPlayer {
 		returnArray = new int[2];
 		crossPoint = 0;
 		alreadyVisited = new boolean [10][10]; 
-		hasFirstLocation = false;
-		hasSecondLocation = false;
-		isSunk = false;
 		firstX = 0;
 		firstY = 0;
 		currentX = 0;
 		currentY = 0;
-		hitState = 5;
+		hitState = 0;
+		nextMove = 0;
 		rand = new Random();
 	}
 	/* Returns an array with the coordinates of a move to make in the format 
 	 * intArray[0] = x and intArray[1] = y 
 	 */
 	public int[] aiMakeMove() {
-		if(hasFirstLocation == false) {
-
+		if(hitState == 0) {
 			int pickX = rand.nextInt(9) + 0;
 			int pickY = rand.nextInt(9) + 0;
 			while(alreadyVisited[pickX][pickY] == true) { 
 				pickX = rand.nextInt(9) + 0;
 				pickY = rand.nextInt(9) + 0;
 			}
+			alreadyVisited[pickX][pickY] = true;
+			firstX = pickX;
+			firstY = pickY;
 			currentX = pickX;
 			currentY = pickY;
-			alreadyVisited[pickX][pickY] = true;	
-
-			if(hitState == 0) { // initial move was a miss
-				hasFirstLocation = false;
-				currentX = 0;
-				currentY = 0;
-			} else if (hitState == 1) { // initial move was a hit
-				hasFirstLocation = true;
-				hitState = 0;
-				firstX = currentX;
-				firstY = currentY;
-			} else { // first pass, so simply adds points to array and checks state
-				returnArray[0] = pickX;
-				returnArray[1] = pickY;
-			}
-
-			// initial move was a hit
-		} else if(hasSecondLocation == false) {
-			if (hitState == 0) {
-				// randomly chooses adjacent points to hit
-				int nextMove = rand.nextInt(4) + 1;
-
-				if(nextMove == 1 && alreadyVisited[currentX - 1][currentY] == false) {
-					currentX -= 1;
-					returnArray[0] = currentX;
-					alreadyVisited[currentX][currentY] = true;
-					crossPoint = 1;
-				} else if(nextMove == 2 && alreadyVisited[currentX][currentY + 1] == false) {
-					currentY += 1;
-					returnArray[0] = currentY;
-					alreadyVisited[currentX][currentY] = true;
-					crossPoint = 2;
-				} else if(nextMove == 3 && alreadyVisited[currentX + 1][currentY] == false) {
-					currentX += 1;
-					returnArray[0] = currentX;
-					alreadyVisited[currentX][currentY] = true;
-					crossPoint = 3;
-				} else if(nextMove == 4 && alreadyVisited[currentX][currentY] == false) {
-					currentY -= 1;
-					returnArray[0] = currentY;
-					alreadyVisited[currentX][currentY] = true;
-					crossPoint = 4;
-				}  
-
-			} else if(hitState == 1) {
-				hasSecondLocation = true;
-			}
-		} else if(hitState == 0 && isSunk == false) {
-			currentX = firstX;
-			currentY = firstY;
-			hitState = 1;
-			if(crossPoint == 1) { // hit was east
-				crossPoint = 4;
-			} else if(crossPoint == 2) { // hit was north
-				crossPoint = 3;
-			} else if(crossPoint == 3) { // hit was west 
-				crossPoint = 2;
-			} else { // hit was south
+			returnArray[0] = pickX;
+			returnArray[1] = pickY;	
+		} else if(hitState == 1) {
+			if(((currentX - 1) <= 9) && ((currentX - 1) >=0) && ((currentY) <= 9) && 
+			   ((currentY) >=0) && alreadyVisited[currentX - 1][currentY] == false) {
+				alreadyVisited[currentX - 1][currentY] = true;
+				currentX -= 1;
 				crossPoint = 1;
+				returnArray[0] = currentX;
+				returnArray[1] = firstY;
+				currentX = firstX;
+				currentY = firstY;
+			} else if(((currentX) <= 9) && ((currentX) >=0) && ((currentY + 1) <= 9) && 
+					   ((currentY + 1) >=0) && alreadyVisited[currentX][currentY + 1] == false) {
+						alreadyVisited[currentX][currentY + 1] = true;
+						currentY += 1;
+						crossPoint = 2;
+						returnArray[0] = firstX;
+						returnArray[1] = currentY;
+						currentX = firstX;
+						currentY = firstY;
+			} else if(((currentX + 1) <= 9) && ((currentX + 1) >=0) && ((currentY) <= 9) && 
+					   ((currentY) >=0) && alreadyVisited[currentX + 1][currentY] == false) {
+						alreadyVisited[currentX + 1][currentY] = true;
+						currentX += 1;
+						crossPoint = 3;
+						returnArray[0] = currentX;
+						returnArray[1] = firstY;
+						currentX = firstX;
+						currentY = firstY;
+			}else if(((currentX) <= 9) && ((currentX) >=0) && ((currentY - 1) <= 9) && 
+					   ((currentY) >=0) && alreadyVisited[currentX][currentY - 1] == false) {
+						alreadyVisited[currentX][currentY - 1] = true;
+						currentY -= 1;
+						crossPoint = 4;
+						returnArray[0] = firstX;
+						returnArray[1] = currentY;
+						currentX = firstX;
+						currentY = firstY;
 			}
-
+			
+		} else if(hitState >= 2) { // the hunt beings...
+			if(crossPoint == 1) { // second hit was east
+				currentX -= 1;
+				alreadyVisited[currentX][currentY] = true;
+				returnArray[0] = currentX;
+			} else if(crossPoint == 2) { // second hit was east
+				currentY += 1;
+				alreadyVisited[currentX][currentY] = true;
+				returnArray[1] = currentY;
+			} else if(crossPoint == 3) { // second hit was east
+				currentX += 1;
+				alreadyVisited[currentX][currentY] = true;
+				returnArray[0] = currentX;
+			} else if(crossPoint == 4) { // second hit was east
+				currentY -= 1;
+				alreadyVisited[currentX][currentY] = true;
+				returnArray[1] = currentY;
+			} 
 		}
-
 		return returnArray;
 	}
-
-
-
+	
+	
 	// hit state methods
 	public void isHit() {
-		hitState = 1;			
+		hitState += 1;
+		if(hitState >= 2) { 
+			if(currentX > 9 || currentX < 0 || currentY > 9 || currentY < 0) {
+				currentX = firstX;
+				currentY = firstY;
+				if(crossPoint == 1) {
+					crossPoint = 3;
+				} else if(crossPoint == 2) {
+					crossPoint = 4;
+				} else if (crossPoint == 3) {
+					crossPoint = 1;
+				} else {
+					crossPoint = 2;
+				}
+			}
+		}
 	}
+	
 	public void isSunk() {
-		isSunk = true;			
+		hitState = 0;	
 	}
+	
 	public void isMiss() {
-		hitState = 0;			
+		if(hitState >= 2) {
+			if(currentX > 9 || currentX < 0 || currentY > 9 || currentY < 0) {
+				currentX = firstX;
+				currentY = firstY;
+				if(crossPoint == 1) {
+					crossPoint = 3;
+				} else if(crossPoint == 2) {
+					crossPoint = 4;
+				} else if (crossPoint == 3) {
+					crossPoint = 1;
+				} else {
+					crossPoint = 2;
+				}
+			}
+		}
+		
+		
 	}
-
-
+	
+	
+	
+	
 }
+
+	
+
+
+
+		
+

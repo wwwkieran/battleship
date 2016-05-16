@@ -102,7 +102,7 @@ public class Battleship extends Applet {
 			playerCanvas.repaint();
 			// AI gets another move
 			AIMove();
-		}
+		} 
 		playerCanvas.repaint();
 		
 	}
