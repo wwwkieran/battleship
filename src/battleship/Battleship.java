@@ -125,10 +125,11 @@ public class Battleship extends Applet {
 			}
 			// AI gets another move
 			AIMove();
-		} 
-		// AI had miss
-		AI.isMiss();
-		playerCanvas.repaint();
+		} else {
+			// AI had miss
+			AI.isMiss();
+			playerCanvas.repaint();
+		}
 
 	}
 
@@ -458,6 +459,7 @@ class boardCanvas extends Canvas implements MouseListener {
 		/* Called if the AI has won */
 		gameOver = true;
 		currentBottomBarText = "AI has won. Click to continue.";
+		repaint();
 	}
 
 	public boolean nothingInBetween(int startx, int starty, int endx, int endy) {
