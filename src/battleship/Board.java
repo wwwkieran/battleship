@@ -46,6 +46,7 @@ public class Board {
 		return board[x][y];
 	}
 	
+	
 	public void addShip(Ship newShip, int numShip) {
 		//Update board
 		for (int x = newShip.startX(); x <= newShip.endX(); x++) {

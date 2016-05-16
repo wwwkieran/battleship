@@ -3,7 +3,6 @@ package battleship;
 import java.applet.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*; // for Stack
 
 @SuppressWarnings("serial")
 
