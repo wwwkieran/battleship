@@ -94,14 +94,17 @@ public class AIPlayer {
 			} else if(crossPoint == 2) { // second hit was east
 				currentY += 1;
 				alreadyVisited[currentX][currentY] = true;
+				returnArray[0] = currentX;
 				returnArray[1] = currentY;
 			} else if(crossPoint == 3) { // second hit was east
 				currentX += 1;
 				alreadyVisited[currentX][currentY] = true;
 				returnArray[0] = currentX;
+				returnArray[1] = currentY;
 			} else if(crossPoint == 4) { // second hit was east
 				currentY -= 1;
 				alreadyVisited[currentX][currentY] = true;
+				returnArray[0] = currentX;
 				returnArray[1] = currentY;
 			} 
 		}
@@ -113,19 +116,15 @@ public class AIPlayer {
 	public void isHit() {
 		hitState += 1;
 		if(hitState >= 2) { 
-			if(currentX > 9 || currentX < 0 || currentY > 9 || currentY < 0) {
-				currentX = firstX;
-				currentY = firstY;
-				if(crossPoint == 1) {
-					crossPoint = 3;
-				} else if(crossPoint == 2) {
-					crossPoint = 4;
-				} else if (crossPoint == 3) {
-					crossPoint = 1;
-				} else {
-					crossPoint = 2;
-				}
-			}
+			if(currentX == 0 && crossPoint == 1) {
+				crossPoint = 3;
+			} else if(currentX == 9 && crossPoint == 3) {
+				crossPoint = 1;
+			} else if(currentX == 0 && crossPoint == 2) {
+				crossPoint = 4;
+			} else if(currentX == 9 && crossPoint == 4) {
+				crossPoint = 2;
+			} 
 		}
 	}
 	
@@ -135,7 +134,6 @@ public class AIPlayer {
 	
 	public void isMiss() {
 		if(hitState >= 2) {
-			if(currentX > 9 || currentX < 0 || currentY > 9 || currentY < 0) {
 				currentX = firstX;
 				currentY = firstY;
 				if(crossPoint == 1) {
@@ -147,7 +145,7 @@ public class AIPlayer {
 				} else {
 					crossPoint = 2;
 				}
-			}
+			
 		}
 		
 		
