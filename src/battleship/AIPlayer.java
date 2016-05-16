@@ -96,7 +96,7 @@ public class AIPlayer {
 			}
 			
 		} else { // the hunt beings...
-			if(hitState == 1) {
+			if(hitState == 1 && isSunk == false) {
 				if(crossArray[0] == 1) { // hit was east
 					currentX -= 1;
 					returnArray[0] = currentX;
