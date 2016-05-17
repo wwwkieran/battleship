@@ -29,6 +29,7 @@ public class Battleship extends Applet {
 	protected final int[] SHIP_LENGTHS = {5,4,3,3,2};
 	protected Random rand;
 	protected int numSunkByAI;
+	
 
 	public void init() {
 		/* Initializes the key variables required for the applet and displays the start screen */
@@ -104,6 +105,8 @@ public class Battleship extends Applet {
 	}
 
 	public void AIMove() {
+		/* Makes a move from the AI on the playerBoard. */
+		opponentCanvas.setUnclickable();
 		int[] move = AI.aiMakeMove();
 
 		int moveResult = playerCanvas.passInMove(move);
@@ -113,27 +116,34 @@ public class Battleship extends Applet {
 			AI.isHit();
 			playerCanvas.repaint();
 			playExplosion();
-			// Check if all AI sunk a ship
-			if (playerCanvas.checkNumSunk() != numSunkByAI) {
-				AI.isSunk();
-				// Check if AI won
-				if (playerCanvas.checkAllSunk()) {
-					// AI has won
-					playerCanvas.AIwon();
-					opponentCanvas.AIwon();
-				}
+			// Tell AI of sunk ships
+			AI.isSunk(playerCanvas.returnSunkShips());
+			// Check if AI won
+			if (playerCanvas.checkAllSunk()) {
+				// AI has won
+				playerCanvas.AIwon();
+				opponentCanvas.AIwon();
+				gameOver = true;
+			} else {
+				// AI gets another move
+				waitThread pauseThread = new waitThread(this);
+				pauseThread.start();
 			}
-			// AI gets another move
-			AIMove();
+		
+			
 		} else {
 			// AI had miss
 			AI.isMiss();
+			opponentCanvas.setClickable();
+			opponentCanvas.repaint();
 			playerCanvas.repaint();
+			
 		}
 
 	}
 
 	public void nextTurn() {
+		/* Gets the game ready for the next turn. */
 		// this happens in both single and two player mode
 		switch (currentPlayer) {
 			case 0: currentPlayer = 1; break;
@@ -150,28 +160,28 @@ public class Battleship extends Applet {
 					int starty;
 					int endy;
 
-					startx = rand.nextInt(9);
-					endx = rand.nextInt(9);
+					startx = rand.nextInt(10);
+					endx = rand.nextInt(10);
 
 					while((startx != endx) && (Math.abs(endx-startx) != SHIP_LENGTHS[i]-1)) {
-						endx = rand.nextInt(9);
+						endx = rand.nextInt(10);
 					}
 
 					// endx is either same as startx or right length away from x
 					if (startx == endx) {
 						// Start x and end x are same, so the ship must be vertical
-						starty = rand.nextInt(9);
+						starty = rand.nextInt(10);
 						endy = SHIP_LENGTHS[i]-1 + starty;
 
 						if (endy > 9) {
-							endy = starty - SHIP_LENGTHS[i]-1;
+							endy = starty - SHIP_LENGTHS[i]+1;
 						}
 
 
 					} else {
 						// Start x and end x are right distance apart, so ship is horizontal
 						// This means the y co-ords are the same...
-						starty = rand.nextInt(9);
+						starty = rand.nextInt(10);
 						endy = starty;
 					}
 
@@ -199,9 +209,11 @@ public class Battleship extends Applet {
 			} else {
 				opponentCanvas.setUnclickable();
 				opponentCanvas.repaint();
-				AIMove();
-				currentPlayer = 1;
-				opponentCanvas.setClickable();
+				waitThread pauseThread = new waitThread(this);
+				pauseThread.start();
+				if (!gameOver) {
+					currentPlayer = 1;
+				}
 			}
 
 
@@ -268,6 +280,7 @@ class boardCanvas extends Canvas implements MouseListener {
 	protected int[] currentShipStartCoords;
 	protected final int ONE_PLAYER_GAME = 1;
 	protected final int TWO_PLAYER_GAME = 2;
+	
 
 
 	public boardCanvas(Battleship b) {
@@ -359,6 +372,9 @@ class boardCanvas extends Canvas implements MouseListener {
 
 
 	public void mousePressed(MouseEvent e) {
+		if (unclickable) {
+			return;
+		}
 		int x = resolveX(e);
 		int y = resolveY(e);
 
@@ -371,16 +387,19 @@ class boardCanvas extends Canvas implements MouseListener {
 			gameOver = false;
 			parent.win();
 		} else if (state == ADD_STATE1) {
-			// Add first point of ship
-			if (board.get(x, y) != 0) {
-				currentBottomBarText = "Invalid. Click somewhere else!";
-				repaint();
-			} else {
-				currentShipStartCoords[0] = x;
-				currentShipStartCoords[1] = y;
-				state = ADD_STATE2;
-				currentBottomBarText = "Click to place the ending point of the " + SHIP_LENGTHS[currentShip] + " box long ship.";
-				repaint();
+			//Check that co-ords are valid
+			if ((x != -1) && (y != -1)) {
+				// Add first point of ship
+				if (board.get(x, y) != 0) {
+					currentBottomBarText = "Invalid. Click somewhere else!";
+					repaint();
+				} else {
+					currentShipStartCoords[0] = x;
+					currentShipStartCoords[1] = y;
+					state = ADD_STATE2;
+					currentBottomBarText = "Click to place the ending point of the " + SHIP_LENGTHS[currentShip] + " box long ship.";
+					repaint();
+				}
 			}
 		} else if (state == ADD_STATE2) {
 			// Add second point of ship
@@ -404,7 +423,7 @@ class boardCanvas extends Canvas implements MouseListener {
 		} else if (state == OPPONENT_STATE) {
 			if ((x != -1) && (y != -1)) {
 				int shotResult = board.shot(x, y);
-
+				
 				if (shotResult == 0) {
 					//Shot was a miss
 					currentBottomBarText = "Miss :( Click anywhere to continue.";
@@ -447,6 +466,7 @@ class boardCanvas extends Canvas implements MouseListener {
 	}
 
 	public int checkNumSunk() {
+		/* Returns number of sunk ships. Ultimately unused. */
 		int numSunk = 0;
 		for (int i = 0; i < NUM_SHIPS; i++) {
 			if (board.isSunk(i))
@@ -454,12 +474,27 @@ class boardCanvas extends Canvas implements MouseListener {
 		}
 		return numSunk;
 	}
+	
+	public int[][] returnSunkShips() {
+		/* Returns an array containing all sunk ship squares so that the AI can update. */
+		int[][] returnBoard = new int[10][10];
+		for (int x = 0; x < 10; x ++) {
+			for (int y = 0; y < 10; y++) {
+				if (board.get(x, y) == 4) {
+					returnBoard[x][y] = 2;
+				}
+			}
+		}
+		
+		return returnBoard;
+	}
 
 	public void AIwon() {
 		/* Called if the AI has won */
 		gameOver = true;
 		currentBottomBarText = "AI has won. Click to continue.";
 		repaint();
+		unclickable = false;
 	}
 
 	public boolean nothingInBetween(int startx, int starty, int endx, int endy) {
@@ -594,6 +629,23 @@ class boardCanvas extends Canvas implements MouseListener {
 	public void mouseEntered(MouseEvent e) {}
 	public void mouseExited(MouseEvent e) {}
 
+} class waitThread extends Thread {
+	protected Battleship parent;
+	
+	public waitThread(Battleship b) {
+		parent = b;
+	}
+	
+	public void run() {
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		parent.AIMove();	
+	}
+	
 } class passCanvas extends Canvas implements MouseListener {
 	protected Battleship parent;
 	protected String message = "";

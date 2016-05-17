@@ -26,6 +26,7 @@ public class Board {
 	//instance methods 
 	
 	public int shot(int x, int y) {
+		/* Updates a board square based on a shot */
 		if (board[x][y] == 1) {
 			//	There was a hit
 			board[x][y] = 2;
@@ -43,6 +44,7 @@ public class Board {
 	}
 	
 	public int get(int x, int y) {
+		/* Returns the state of a board square. */ 
 		return board[x][y];
 	}
 	
